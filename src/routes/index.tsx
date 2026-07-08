@@ -1,24 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Control & Cumplimiento SGA 2026" },
+      {
+        name: "description",
+        content:
+          "Dashboard de seguimiento y cumplimiento del Sistema de Gestión Ambiental 2026: actividades PHVA, responsables y programas PUAA, PGIRS y PUEAE.",
+      },
+      { property: "og:title", content: "Control & Cumplimiento SGA 2026" },
+      {
+        property: "og:description",
+        content:
+          "Seguimiento de actividades ambientales, cronograma PHVA y cumplimiento por responsable y programa.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: DashboardRedirect,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function DashboardRedirect() {
+  useEffect(() => {
+    window.location.replace("/dashboard.html");
+  }, []);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">
+          Cargando Sistema de Gestión Ambiental…
+        </p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Si no eres redirigido,{" "}
+          <a href="/dashboard.html" className="underline text-primary">
+            abre el dashboard aquí
+          </a>
+          .
+        </p>
+      </div>
     </div>
   );
 }
