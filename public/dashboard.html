@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Control & Cumplimiento SGA 2026</title>
+
+<!-- Tailwind CSS (compilación en vivo en el navegador, suficiente para un archivo único) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Mapa de importación: permite usar import/export nativos en el navegador
+     resolviendo "react", "react-dom" y "lucide-react" contra paquetes ESM listos para usar. -->
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.383.0?external=react"
+  }
+}
+</script>
+
+<!-- Babel Standalone: transforma JSX directamente en el navegador -->
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+<style>
+  html, body { margin: 0; padding: 0; background-color: #f8fafc; }
+  /* Animación simple para los toasts (equivalente a animate-bounce de Tailwind) */
+  @keyframes gentle-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .animate-bounce { animation: gentle-bounce 1s infinite; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;">
+    Cargando Sistema de Gestión Ambiental…
+  </div>
+</div>
+
+<script type="text/babel" data-type="module" data-presets="react">
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  BarChart3,
+  Users,
+  CheckCircle,
+  Clock,
+  Calendar,
+  Filter,
+  Plus,
+  Download,
+  Upload,
+  TrendingUp,
+  Award,
+  Layers,
+  Search,
+  Check,
+  X,
+  AlertCircle,
+  Edit2,
+  Trash2,
+  UserPlus,
+  UserMinus,
+  Briefcase,
+  FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  HardDriveDownload
+} from 'lucide-react';
+
+
+const INITIAL_ACTIVITIES = [
+  {
+    id: '1',
+    fase: 'PLANEAR',
+    actividad: 'Revisión, ajuste y análisis del programa PUAA',
+    responsable: 'Valerie Ayos',
+    recurso: 'Administrativo',
+    programas: ['PUAA'],
+    cronograma: {
+      Enero: { p: false, e: false },
+      Febrero: { p: false, e: false },
+      Marzo: { p: true, e: true },
+      Abril: { p: false, e: false },
+      Mayo: { p: false, e: false },
+      Junio: { p: false, e: false },
+      Julio: { p: false, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: false, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '2',
+    fase: 'PLANEAR',
+    actividad: 'Revisión de la documentación de los programas de gestión y sus formatos',
+    responsable: 'Juan Camilo Calderón',
+    recurso: 'Administrativo',
+    programas: ['PUAA', 'PGIRS', 'PUEAE'],
+    cronograma: {
+      Enero: { p: false, e: false },
+      Febrero: { p: false, e: false },
+      Marzo: { p: false, e: false },
+      Abril: { p: true, e: true },
+      Mayo: { p: true, e: true },
+      Junio: { p: false, e: false },
+      Julio: { p: false, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: false, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '3',
+    fase: 'PLANEAR',
+    actividad: 'Revisión y ajuste del contexto con base en los requerimientos del estándar del Sistema de Gestión Basura Cero',
+    responsable: 'Valerie Ayos',
+    recurso: 'Administrativo',
+    programas: ['PGIRS'],
+    cronograma: {
+      Enero: { p: true, e: true },
+      Febrero: { p: true, e: true },
+      Marzo: { p: true, e: true },
+      Abril: { p: false, e: false },
+      Mayo: { p: false, e: false },
+      Junio: { p: false, e: false },
+      Julio: { p: false, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: false, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '4',
+    fase: 'PLANEAR',
+    actividad: 'Revisión y proyección de ajuste a la Política del SGI vinculando requisitos aplicables del Sistema de Gestión Basura Cero',
+    responsable: 'Valerie Ayos',
+    recurso: 'Administrativo',
+    programas: ['PGIRS'],
+    cronograma: {
+      Enero: { p: true, e: true },
+      Febrero: { p: false, e: false },
+      Marzo: { p: false, e: false },
+      Abril: { p: false, e: false },
+      Mayo: { p: false, e: false },
+      Junio: { p: false, e: false },
+      Julio: { p: false, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: false, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '5',
+    fase: 'HACER',
+    actividad: 'Incluir el componente de eficiencia energética en el Programa de Gestión de Uso Eficiente y Ahorro de Energía PUEAE',
+    responsable: 'Valerie Ayos',
+    recurso: 'Administrativo',
+    programas: ['PUEAE'],
+    cronograma: {
+      Enero: { p: false, e: false },
+      Febrero: { p: false, e: false },
+      Marzo: { p: false, e: false },
+      Abril: { p: false, e: false },
+      Mayo: { p: true, e: true },
+      Junio: { p: true, e: false },
+      Julio: { p: false, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: false, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '6',
+    fase: 'HACER',
+    actividad: 'Incluir el componente Basura Cero en el Programa de Gestión Integral de Residuos Sólidos PGIRS',
+    responsable: 'Valerie Ayos',
+    recurso: 'Administrativo',
+    programas: ['PGIRS'],
+    cronograma: {
+      Enero: { p: false, e: false },
+      Febrero: { p: false, e: false },
+      Marzo: { p: false, e: false },
+      Abril: { p: false, e: false },
+      Mayo: { p: false, e: false },
+      Junio: { p: true, e: true },
+      Julio: { p: true, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: false, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '7',
+    fase: 'HACER',
+    actividad: 'Seguimiento a la aplicación de los lineamientos de Compras Públicas Sostenibles en Adquisición de Bienes y Servicios',
+    responsable: 'Juan Camilo Calderón',
+    recurso: 'Administrativo',
+    programas: ['PUAA', 'PGIRS', 'PUEAE'],
+    cronograma: {
+      Enero: { p: false, e: false },
+      Febrero: { p: false, e: false },
+      Marzo: { p: true, e: true },
+      Abril: { p: false, e: false },
+      Mayo: { p: true, e: true },
+      Junio: { p: false, e: false },
+      Julio: { p: true, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: true, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: true, e: false },
+      Diciembre: { p: false, e: false }
+    }
+  },
+  {
+    id: '8',
+    fase: 'HACER',
+    actividad: 'Seguimiento a requisitos legales ambientales',
+    responsable: 'Juan Camilo Calderón',
+    recurso: 'Administrativo',
+    programas: ['PUAA', 'PGIRS', 'PUEAE'],
+    cronograma: {
+      Enero: { p: false, e: false },
+      Febrero: { p: false, e: false },
+      Marzo: { p: true, e: true },
+      Abril: { p: false, e: false },
+      Mayo: { p: false, e: false },
+      Junio: { p: true, e: true },
+      Julio: { p: false, e: false },
+      Agosto: { p: false, e: false },
+      Septiembre: { p: true, e: false },
+      Octubre: { p: false, e: false },
+      Noviembre: { p: false, e: false },
+      Diciembre: { p: true, e: false }
+    }
+  }
+];
+
+const MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+// Paleta de colores disponible para diferenciar visualmente cada tipo de programa.
+// Se usan clases completas (no interpoladas) para que Tailwind las detecte siempre.
+const PROGRAM_COLOR_PALETTE = [
+  { id: 'emerald', name: 'Verde',    chip: 'bg-emerald-50 border-emerald-100 text-emerald-800', solid: 'bg-emerald-800 border-emerald-900 text-white', dot: 'bg-emerald-500' },
+  { id: 'blue',    name: 'Azul',     chip: 'bg-blue-50 border-blue-100 text-blue-800',           solid: 'bg-blue-800 border-blue-900 text-white',       dot: 'bg-blue-500' },
+  { id: 'purple',  name: 'Morado',   chip: 'bg-purple-50 border-purple-100 text-purple-800',     solid: 'bg-purple-800 border-purple-900 text-white',   dot: 'bg-purple-500' },
+  { id: 'amber',   name: 'Ámbar',    chip: 'bg-amber-50 border-amber-100 text-amber-800',        solid: 'bg-amber-700 border-amber-800 text-white',     dot: 'bg-amber-500' },
+  { id: 'rose',    name: 'Rosa',     chip: 'bg-rose-50 border-rose-100 text-rose-800',           solid: 'bg-rose-800 border-rose-900 text-white',       dot: 'bg-rose-500' },
+  { id: 'cyan',    name: 'Cian',     chip: 'bg-cyan-50 border-cyan-100 text-cyan-800',            solid: 'bg-cyan-800 border-cyan-900 text-white',       dot: 'bg-cyan-500' },
+  { id: 'indigo',  name: 'Índigo',   chip: 'bg-indigo-50 border-indigo-100 text-indigo-800',      solid: 'bg-indigo-800 border-indigo-900 text-white',   dot: 'bg-indigo-500' },
+  { id: 'orange',  name: 'Naranja',  chip: 'bg-orange-50 border-orange-100 text-orange-800',      solid: 'bg-orange-700 border-orange-800 text-white',   dot: 'bg-orange-500' }
+];
+
+const getColorClasses = (colorId) => PROGRAM_COLOR_PALETTE.find(c => c.id === colorId) || PROGRAM_COLOR_PALETTE[0];
+
+// Clave usada para guardar el estado del cronograma en localStorage del navegador.
+// Esto permite que la información persista al recargar la página sin necesitar backend.
+const STORAGE_KEY = 'sga_2026_dashboard_state_v1';
+
+// Intenta leer el estado guardado previamente en este navegador.
+// Si no existe, está corrupto, o el navegador no soporta localStorage, retorna null
+// y el dashboard arranca con los datos de ejemplo (INITIAL_*).
+const loadPersistedState = () => {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch (err) {
+    console.warn('No se pudo leer el estado guardado en localStorage:', err);
+    return null;
+  }
+};
+
+// Tipos de programa por defecto del sistema. El usuario puede agregar nuevos
+// tipos en tiempo de ejecución desde el panel "Gestión de Programas".
+const INITIAL_PROGRAM_TYPES = [
+  { code: 'PUAA', label: 'PUAA (Agua)', color: 'emerald' },
+  { code: 'PGIRS', label: 'PGIRS (Residuos)', color: 'blue' },
+  { code: 'PUEAE', label: 'PUEAE (Energía)', color: 'amber' }
+];
+
+// Convierte una fecha ISO en un texto relativo corto en español (ej. "hace 3 min").
+const formatRelativeTime = (isoString) => {
+  try {
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const diffSec = Math.round(diffMs / 1000);
+    if (diffSec < 10) return 'hace un instante';
+    if (diffSec < 60) return `hace ${diffSec} seg`;
+    const diffMin = Math.round(diffSec / 60);
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const diffHr = Math.round(diffMin / 60);
+    if (diffHr < 24) return `hace ${diffHr} h`;
+    const diffDay = Math.round(diffHr / 24);
+    return `hace ${diffDay} día${diffDay === 1 ? '' : 's'}`;
+  } catch (err) {
+    return '';
+  }
+};
+
+export default function App() {
+  const [activities, setActivities] = useState(() => {
+    const persisted = loadPersistedState();
+    return (persisted?.activities && Array.isArray(persisted.activities) && persisted.activities.length > 0)
+      ? persisted.activities
+      : INITIAL_ACTIVITIES;
+  });
+  const [responsibles, setResponsibles] = useState(() => {
+    const persisted = loadPersistedState();
+    return (persisted?.responsibles && Array.isArray(persisted.responsibles) && persisted.responsibles.length > 0)
+      ? persisted.responsibles
+      : ['Valerie Ayos', 'Juan Camilo Calderón', 'Grupo SGI'];
+  });
+  const [programTypes, setProgramTypes] = useState(() => {
+    const persisted = loadPersistedState();
+    return (persisted?.programTypes && Array.isArray(persisted.programTypes) && persisted.programTypes.length > 0)
+      ? persisted.programTypes.map(p => ({ color: 'emerald', ...p }))
+      : INITIAL_PROGRAM_TYPES;
+  });
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Indicador de persistencia: cuándo fue la última vez que se guardó en este navegador
+  const [lastSavedAt, setLastSavedAt] = useState(() => loadPersistedState()?.savedAt || null);
+  const isFirstRender = useRef(true);
+  
+  // File inputs ref for importing backups
+  const fileInputRef = useRef(null);
+
+  // Filters State
+  const [filterResponsable, setFilterResponsable] = useState('Todos');
+  const [filterPrograma, setFilterPrograma] = useState('Todos');
+  const [filterFase, setFilterFase] = useState('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Add Activity Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newActName, setNewActName] = useState('');
+  const [newActResp, setNewActResp] = useState('');
+  const [newActFase, setNewActFase] = useState('PLANEAR');
+  const [newActProgs, setNewActProgs] = useState(INITIAL_PROGRAM_TYPES.length > 0 ? [INITIAL_PROGRAM_TYPES[0].code] : []);
+  const [newActRec, setNewActRec] = useState('Administrativo');
+
+  // Program Type Administration state (panel "Gestión de Programas")
+  const [newProgramCode, setNewProgramCode] = useState('');
+  const [newProgramLabel, setNewProgramLabel] = useState('');
+
+  // Edit Activity Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editActId, setEditActId] = useState('');
+  const [editActName, setEditActName] = useState('');
+  const [editActResp, setEditActResp] = useState('');
+  const [editActFase, setEditActFase] = useState('PLANEAR');
+  const [editActProgs, setEditActProgs] = useState([]);
+  const [editActRec, setEditActRec] = useState('Administrativo');
+
+  // People Administration state inside the Cumplimiento tab
+  const [newPersonName, setNewPersonName] = useState('');
+
+  // Notification and Custom Modals States (Preventing alerts/confirms)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [customConfirm, setCustomConfirm] = useState({ 
+    show: false, 
+    title: '', 
+    message: '', 
+    onConfirm: () => {}, 
+    onCancel: () => {},
+    options: null,
+    fallbackOption: null
+  });
+
+  // Automatically assign default responsible if none selected when modal opens
+  React.useEffect(() => {
+    if (responsibles.length > 0) {
+      if (!newActResp) setNewActResp(responsibles[0]);
+    }
+  }, [responsibles, newActResp]);
+
+  // Si el programa por defecto de "Nueva Actividad" deja de existir (por ejemplo,
+  // fue eliminado en el panel de Gestión de Programas), se reemplaza por uno válido.
+  React.useEffect(() => {
+    const validCodes = programTypes.map(p => p.code);
+    setNewActProgs(prev => {
+      const stillValid = prev.filter(p => validCodes.includes(p));
+      if (stillValid.length > 0) return stillValid;
+      return validCodes.length > 0 ? [validCodes[0]] : [];
+    });
+  }, [programTypes]);
+
+  // PERSISTENCIA REAL EN EL NAVEGADOR (localStorage)
+  // Guarda automáticamente el cronograma, el equipo y los programas cada vez que
+  // cambian, con un pequeño debounce para no escribir en disco en cada click.
+  // Esto evita perder la información al recargar o cerrar accidentalmente la página.
+  // Para compartir entre equipos o varios dispositivos sigue siendo necesario usar
+  // "Exportar Backup" o, idealmente, conectar este estado a una API/base de datos real.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const handle = setTimeout(() => {
+      try {
+        if (typeof window === 'undefined' || !window.localStorage) return;
+        const savedAt = new Date().toISOString();
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          version: '2026.1',
+          activities,
+          responsibles,
+          programTypes,
+          savedAt
+        }));
+        setLastSavedAt(savedAt);
+      } catch (err) {
+        console.warn('No se pudo guardar el estado en localStorage:', err);
+      }
+    }, 600);
+
+    return () => clearTimeout(handle);
+  }, [activities, responsibles, programTypes]);
+
+  const handleResetLocalData = () => {
+    setCustomConfirm({
+      show: true,
+      title: 'Restaurar Datos de Fábrica',
+      message: 'Esto borrará el cronograma guardado en este navegador y restaurará los datos de ejemplo originales. Esta acción no se puede deshacer. Se recomienda exportar un backup antes de continuar.',
+      onConfirm: () => {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.removeItem(STORAGE_KEY);
+          }
+        } catch (err) {
+          console.warn('No se pudo limpiar localStorage:', err);
+        }
+        setActivities(INITIAL_ACTIVITIES);
+        setResponsibles(['Valerie Ayos', 'Juan Camilo Calderón', 'Grupo SGI']);
+        setProgramTypes(INITIAL_PROGRAM_TYPES);
+        setLastSavedAt(null);
+        triggerToast('Datos restaurados a los valores de fábrica.', 'success');
+        closeConfirm();
+      },
+      onCancel: () => closeConfirm()
+    });
+  };
+
+  const triggerToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  const closeConfirm = () => {
+    setCustomConfirm({ show: false, title: '', message: '', onConfirm: () => {}, onCancel: () => {}, options: null, fallbackOption: null });
+  };
+
+  const programsList = ['Todos', ...programTypes.map(p => p.code)];
+  const fasesList = ['Todos', 'PLANEAR', 'HACER', 'VERIFICAR', 'ACTUAR'];
+
+  const getProgramLabel = (code) => {
+    const found = programTypes.find(p => p.code === code);
+    return found ? found.label : code;
+  };
+
+  const getProgramBadgeClasses = (code) => {
+    const found = programTypes.find(p => p.code === code);
+    return getColorClasses(found?.color).chip;
+  };
+
+  const handleToggleCell = (activityId, month, type) => {
+    setActivities(prev => prev.map(act => {
+      if (act.id === activityId) {
+        const updatedCronograma = { ...act.cronograma };
+        updatedCronograma[month] = {
+          ...updatedCronograma[month],
+          [type]: !updatedCronograma[month][type]
+        };
+        if (type === 'p' && !updatedCronograma[month].p) {
+          updatedCronograma[month].e = false;
+        }
+        return { ...act, cronograma: updatedCronograma };
+      }
+      return act;
+    }));
+  };
+
+  const handleToggleProgramSelection = (prog, mode = 'add') => {
+    const targetState = mode === 'add' ? newActProgs : editActProgs;
+    const targetSetter = mode === 'add' ? setNewActProgs : setEditActProgs;
+
+    if (targetState.includes(prog)) {
+      if (targetState.length === 1) return; // Must have at least 1 program
+      targetSetter(targetState.filter(p => p !== prog));
+    } else {
+      targetSetter([...targetState, prog]);
+    }
+  };
+
+  const handleSelectAllPrograms = (mode = 'add') => {
+    const targetSetter = mode === 'add' ? setNewActProgs : setEditActProgs;
+    targetSetter(programTypes.map(p => p.code));
+  };
+
+  // --- GESTIÓN DE TIPOS DE PROGRAMA (NUEVO REQUERIMIENTO) ---
+  const handleAddProgramType = (e) => {
+    e.preventDefault();
+    const code = newProgramCode.trim().toUpperCase();
+
+    if (!code) {
+      triggerToast('Ingrese una sigla o código para el nuevo programa.', 'error');
+      return;
+    }
+
+    if (programTypes.some(p => p.code.toUpperCase() === code)) {
+      triggerToast('Ya existe un programa registrado con ese código.', 'error');
+      return;
+    }
+
+    const label = newProgramLabel.trim() || code;
+    // Se asigna un color rotando la paleta para que cada programa nuevo se
+    // distinga visualmente de los demás, sin que el usuario tenga que elegirlo.
+    const usedColors = new Set(programTypes.map(p => p.color));
+    const nextColor = PROGRAM_COLOR_PALETTE.find(c => !usedColors.has(c.id))?.id
+      || PROGRAM_COLOR_PALETTE[programTypes.length % PROGRAM_COLOR_PALETTE.length].id;
+
+    setProgramTypes(prev => [...prev, { code, label, color: nextColor }]);
+    setNewProgramCode('');
+    setNewProgramLabel('');
+    triggerToast(`Programa "${code}" agregado correctamente.`, 'success');
+  };
+
+  // --- EDICIÓN INLINE DE PROGRAMAS YA CREADOS ---
+  const [editingProgramCode, setEditingProgramCode] = useState(null);
+  const [editProgramDraft, setEditProgramDraft] = useState({ code: '', label: '', color: 'emerald' });
+
+  const handleStartEditProgramType = (program) => {
+    setEditingProgramCode(program.code);
+    setEditProgramDraft({ code: program.code, label: program.label, color: program.color || 'emerald' });
+  };
+
+  const handleCancelEditProgramType = () => {
+    setEditingProgramCode(null);
+    setEditProgramDraft({ code: '', label: '', color: 'emerald' });
+  };
+
+  const handleSaveEditProgramType = (e) => {
+    e.preventDefault();
+    const originalCode = editingProgramCode;
+    const newCode = editProgramDraft.code.trim().toUpperCase();
+    const newLabel = editProgramDraft.label.trim() || newCode;
+    const newColor = editProgramDraft.color;
+
+    if (!newCode) {
+      triggerToast('La sigla del programa no puede estar vacía.', 'error');
+      return;
+    }
+
+    // Si cambia la sigla, se valida que no choque con otro programa existente.
+    const duplicate = programTypes.some(p => p.code !== originalCode && p.code.toUpperCase() === newCode);
+    if (duplicate) {
+      triggerToast('Ya existe otro programa registrado con esa sigla.', 'error');
+      return;
+    }
+
+    setProgramTypes(prev => prev.map(p => (
+      p.code === originalCode ? { code: newCode, label: newLabel, color: newColor } : p
+    )));
+
+    // Si la sigla cambió, se actualiza en cascada en todas las actividades que la usan,
+    // evitando duplicados si por alguna razón la actividad ya tenía ambos códigos.
+    if (newCode !== originalCode) {
+      setActivities(prev => prev.map(act => {
+        if (!act.programas.includes(originalCode)) return act;
+        const updated = act.programas.map(p => (p === originalCode ? newCode : p));
+        const deduped = Array.from(new Set(updated));
+        return { ...act, programas: deduped };
+      }));
+      if (filterPrograma === originalCode) setFilterPrograma(newCode);
+    }
+
+    handleCancelEditProgramType();
+    triggerToast('Programa actualizado correctamente.', 'success');
+  };
+
+  const handleDeleteProgramType = (code) => {
+    const usedActivities = activities.filter(a => a.programas.includes(code));
+    const soloActivities = usedActivities.filter(a => a.programas.length === 1);
+    const otherPrograms = programTypes.filter(p => p.code !== code);
+
+    const removeProgramType = () => {
+      setProgramTypes(prev => prev.filter(p => p.code !== code));
+      if (filterPrograma === code) setFilterPrograma('Todos');
+      if (editingProgramCode === code) handleCancelEditProgramType();
+    };
+
+    // Caso 1: el programa no está en uso, se elimina directamente.
+    if (usedActivities.length === 0) {
+      setCustomConfirm({
+        show: true,
+        title: 'Eliminar Programa',
+        message: `¿Desea eliminar el programa "${code}" del sistema? Actualmente no está asociado a ninguna actividad.`,
+        onConfirm: () => {
+          removeProgramType();
+          triggerToast('Programa eliminado correctamente.', 'success');
+          closeConfirm();
+        },
+        onCancel: () => closeConfirm()
+      });
+      return;
+    }
+
+    // Caso 2: hay actividades que dependen EXCLUSIVAMENTE de este programa,
+    // pero no existe ningún otro programa al cual reasignarlas. Se bloquea.
+    if (soloActivities.length > 0 && otherPrograms.length === 0) {
+      triggerToast(
+        `No es posible eliminar "${code}": ${soloActivities.length} actividad(es) dependen exclusivamente de este programa y no existe otro programa para reasignarlas.`,
+        'error'
+      );
+      return;
+    }
+
+    // Caso 3: hay actividades que quedarían sin ningún programa asociado.
+    // Se solicita reasignación, igual que con la eliminación de integrantes.
+    if (soloActivities.length > 0) {
+      setCustomConfirm({
+        show: true,
+        title: 'Eliminar Programa con Reasignación',
+        message: `El programa "${code}" está asociado a ${usedActivities.length} actividad(es). De estas, ${soloActivities.length} dependen exclusivamente de él. Seleccione a qué programa desea reasignarlas para no dejarlas sin clasificación:`,
+        options: otherPrograms.map(p => ({ label: `Reasignar a ${p.code}`, value: p.code })),
+        onConfirm: (selectedReassignment) => {
+          const target = selectedReassignment || otherPrograms[0].code;
+
+          setActivities(prev => prev.map(act => {
+            if (!act.programas.includes(code)) return act;
+            if (act.programas.length === 1) {
+              return { ...act, programas: [target] };
+            }
+            return { ...act, programas: act.programas.filter(p => p !== code) };
+          }));
+
+          removeProgramType();
+          triggerToast(`Programa eliminado. Actividades exclusivas reasignadas a ${target}.`, 'success');
+          closeConfirm();
+        },
+        onCancel: () => closeConfirm()
+      });
+      return;
+    }
+
+    // Caso 4: todas las actividades que usan este programa también tienen otros
+    // programas asociados, así que basta con retirarlo de la lista de cada una.
+    setCustomConfirm({
+      show: true,
+      title: 'Eliminar Programa',
+      message: `El programa "${code}" se removerá de ${usedActivities.length} actividad(es) que lo tienen junto con otros programas asociados. ¿Desea continuar?`,
+      onConfirm: () => {
+        setActivities(prev => prev.map(act => (
+          act.programas.includes(code)
+            ? { ...act, programas: act.programas.filter(p => p !== code) }
+            : act
+        )));
+        removeProgramType();
+        triggerToast('Programa eliminado correctamente.', 'success');
+        closeConfirm();
+      },
+      onCancel: () => closeConfirm()
+    });
+  };
+
+  const handleAddActivity = (e) => {
+    e.preventDefault();
+    if (!newActName.trim() || newActProgs.length === 0) {
+      triggerToast('Por favor, asigne un nombre y al menos un programa.', 'error');
+      return;
+    }
+
+    const emptyCronograma = {};
+    MONTHS.forEach(m => {
+      emptyCronograma[m] = { p: false, e: false };
+    });
+
+    const newActivity = {
+      id: Date.now().toString(),
+      fase: newActFase,
+      actividad: newActName,
+      responsable: newActResp || responsibles[0] || 'Sin Asignar',
+      recurso: newActRec,
+      programas: newActProgs,
+      cronograma: emptyCronograma
+    };
+
+    setActivities(prev => [...prev, newActivity]);
+    setNewActName('');
+    setNewActProgs(programTypes.length > 0 ? [programTypes[0].code] : []);
+    setIsAddModalOpen(false);
+    triggerToast('Actividad agregada al cronograma correctamente.', 'success');
+  };
+
+  const handleOpenEditModal = (activity) => {
+    setEditActId(activity.id);
+    setEditActName(activity.actividad);
+    setEditActResp(activity.responsable);
+    setEditActFase(activity.fase);
+    setEditActProgs(activity.programas || []);
+    setEditActRec(activity.recurso);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditActivity = (e) => {
+    e.preventDefault();
+    if (!editActName.trim() || editActProgs.length === 0) {
+      triggerToast('Por favor, especifique el nombre y asigne al menos un programa.', 'error');
+      return;
+    }
+
+    setActivities(prev => prev.map(act => {
+      if (act.id === editActId) {
+        return {
+          ...act,
+          actividad: editActName,
+          responsable: editActResp,
+          fase: editActFase,
+          programas: editActProgs,
+          recurso: editActRec
+        };
+      }
+      return act;
+    }));
+
+    setIsEditModalOpen(false);
+    triggerToast('Actividad actualizada correctamente.', 'success');
+  };
+
+  const handleDeleteActivity = (id, name) => {
+    setCustomConfirm({
+      show: true,
+      title: 'Eliminar Actividad',
+      message: `¿Está seguro de que desea eliminar permanentemente la actividad: "${name}"?`,
+      onConfirm: () => {
+        setActivities(prev => prev.filter(a => a.id !== id));
+        triggerToast('Actividad eliminada correctamente.', 'success');
+        closeConfirm();
+      },
+      onCancel: () => closeConfirm()
+    });
+  };
+
+  const handleAddPerson = (e) => {
+    e.preventDefault();
+    const formattedName = newPersonName.trim();
+    if (!formattedName) return;
+
+    if (responsibles.some(r => r.toLowerCase() === formattedName.toLowerCase())) {
+      triggerToast('Este integrante ya se encuentra registrado.', 'error');
+      return;
+    }
+
+    setResponsibles(prev => [...prev, formattedName]);
+    setNewPersonName('');
+    triggerToast(`¡${formattedName} ha sido agregado al equipo con éxito!`, 'success');
+  };
+
+  const handleDeletePerson = (personName) => {
+    // Check if the person has activities assigned
+    const assignedActivities = activities.filter(a => a.responsable === personName);
+
+    if (assignedActivities.length === 0) {
+      setCustomConfirm({
+        show: true,
+        title: 'Eliminar Integrante',
+        message: `¿Desea eliminar a "${personName}" de la lista de responsables? No tiene actividades asignadas actualmente.`,
+        onConfirm: () => {
+          setResponsibles(prev => prev.filter(r => r !== personName));
+          if (filterResponsable === personName) setFilterResponsable('Todos');
+          triggerToast('Integrante removido.', 'success');
+          closeConfirm();
+        },
+        onCancel: () => closeConfirm()
+      });
+    } else {
+      // Reassign option parameters for custom modal
+      const otherResponsibles = responsibles.filter(r => r !== personName);
+      const fallbackOption = otherResponsibles.length > 0 ? otherResponsibles[0] : 'Grupo SGI';
+
+      setCustomConfirm({
+        show: true,
+        title: 'Eliminar con Reasignación',
+        message: `"${personName}" tiene actualmente ${assignedActivities.length} actividades asignadas. Para no dañar el cronograma, seleccione a quién desea reasignar estas tareas:`,
+        options: otherResponsibles.map(r => ({ label: `Reasignar a ${r}`, value: r })),
+        fallbackOption: otherResponsibles.includes('Grupo SGI')
+          ? null
+          : { label: 'Reasignar al equipo general (Grupo SGI)', value: 'Grupo SGI' },
+        onConfirm: (selectedReassignment) => {
+          const reassignTarget = selectedReassignment || fallbackOption;
+          
+          // Reassign activities
+          setActivities(prev => prev.map(act => {
+            if (act.responsable === personName) {
+              return { ...act, responsable: reassignTarget };
+            }
+            return act;
+          }));
+
+          // Remove person from team
+          setResponsibles(prev => prev.filter(r => r !== personName));
+          if (filterResponsable === personName) setFilterResponsable('Todos');
+          
+          triggerToast(`Tareas reasignadas a ${reassignTarget}. Integrante eliminado.`, 'success');
+          closeConfirm();
+        },
+        onCancel: () => closeConfirm()
+      });
+    }
+  };
+
+  const handleExportBackup = () => {
+    const dataState = {
+      version: "2026.1",
+      activities,
+      responsibles,
+      programTypes
+    };
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(dataState, null, 2))}`;
+    const link = document.createElement("a");
+    link.setAttribute("href", jsonString);
+    link.setAttribute("download", "cronograma_SGA_backup.json");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    triggerToast('Copia de seguridad del sistema descargada correctamente.', 'success');
+  };
+
+  const handleDownloadCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Fase,Actividad,Responsables,Programas,Recurso,Enero,Febrero,Marzo,Abril,Mayo,Junio,Julio,Agosto,Septiembre,Octubre,Noviembre,Diciembre\n";
+    
+    activities.forEach(act => {
+      const monthDetails = MONTHS.map(m => {
+        const p = act.cronograma[m].p ? 'P' : '';
+        const e = act.cronograma[m].e ? 'E' : '';
+        return p && e ? 'P+E' : p || e || '-';
+      }).join(',');
+
+      csvContent += `"${act.fase}","${act.actividad}","${act.responsable}","${act.programas.join('; ')}","${act.recurso}",${monthDetails}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "1. Cronograma de trabajo del SGA 2026_export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    triggerToast('Reporte de cronograma CSV exportado.', 'success');
+  };
+
+  const triggerImportClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileReader = new FileReader();
+    fileReader.onload = (event) => {
+      try {
+        const fileContent = event.target.result;
+        // Attempt to parse as JSON first (loss-less copy backup)
+        if (file.name.endsWith('.json')) {
+          const parsedData = JSON.parse(fileContent);
+          if (parsedData.activities && Array.isArray(parsedData.activities)) {
+            setActivities(parsedData.activities);
+            if (parsedData.responsibles && Array.isArray(parsedData.responsibles)) {
+              setResponsibles(parsedData.responsibles);
+            }
+            if (parsedData.programTypes && Array.isArray(parsedData.programTypes)) {
+              setProgramTypes(parsedData.programTypes.map((p, idx) => ({
+                color: PROGRAM_COLOR_PALETTE[idx % PROGRAM_COLOR_PALETTE.length].id,
+                ...p
+              })));
+            }
+            triggerToast('Cronograma e integrantes restaurados con éxito.', 'success');
+          } else {
+            triggerToast('Formato JSON inválido. Verifique la estructura.', 'error');
+          }
+        } 
+        // Simple CSV parser for quick uploads
+        else if (file.name.endsWith('.csv')) {
+          const lines = fileContent.split('\n');
+          if (lines.length > 1) {
+            const importedActivities = [];
+            const detectedResponsibles = new Set(responsibles);
+            const detectedPrograms = new Map(programTypes.map(p => [p.code, p]));
+
+            for (let i = 1; i < lines.length; i++) {
+              if (!lines[i].trim()) continue;
+              // Simple comma split handling basic quotes
+              const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+              if (cols.length >= 5) {
+                const fase = cols[0].replace(/"/g, '').trim();
+                const actividad = cols[1].replace(/"/g, '').trim();
+                const responsable = cols[2].replace(/"/g, '').trim();
+                const progString = cols[3].replace(/"/g, '').trim();
+                const recurso = cols[4].replace(/"/g, '').trim();
+
+                const programas = progString.split(';').map(p => p.trim()).filter(Boolean);
+                detectedResponsibles.add(responsable);
+                programas.forEach(p => {
+                  if (!detectedPrograms.has(p)) {
+                    const usedColors = new Set(Array.from(detectedPrograms.values()).map(dp => dp.color));
+                    const autoColor = PROGRAM_COLOR_PALETTE.find(c => !usedColors.has(c.id))?.id
+                      || PROGRAM_COLOR_PALETTE[detectedPrograms.size % PROGRAM_COLOR_PALETTE.length].id;
+                    detectedPrograms.set(p, { code: p, label: p, color: autoColor });
+                  }
+                });
+
+                // Reconstruct cronograma
+                const cronograma = {};
+                MONTHS.forEach((m, idx) => {
+                  const val = cols[5 + idx] ? cols[5 + idx].replace(/"/g, '').trim() : '-';
+                  cronograma[m] = {
+                    p: val.includes('P'),
+                    e: val.includes('E')
+                  };
+                });
+
+                importedActivities.push({
+                  id: `imported-${Date.now()}-${i}`,
+                  fase: ['PLANEAR', 'HACER', 'VERIFICAR', 'ACTUAR'].includes(fase) ? fase : 'PLANEAR',
+                  actividad,
+                  responsable,
+                  recurso,
+                  programas: programas.length > 0 ? programas : (programTypes[0] ? [programTypes[0].code] : []),
+                  cronograma
+                });
+              }
+            }
+
+            if (importedActivities.length > 0) {
+              setActivities(importedActivities);
+              setResponsibles(Array.from(detectedResponsibles));
+              setProgramTypes(Array.from(detectedPrograms.values()));
+              triggerToast(`¡Importados ${importedActivities.length} registros del CSV correctamente!`, 'success');
+            } else {
+              triggerToast('No se pudieron procesar datos del CSV.', 'error');
+            }
+          }
+        }
+      } catch (err) {
+        triggerToast('Error al leer o analizar el archivo.', 'error');
+      }
+    };
+    fileReader.readAsText(file);
+    // Reset file value to allow importing same file again
+    e.target.value = '';
+  };
+
+  const filteredActivities = useMemo(() => {
+    return activities.filter(act => {
+      const matchesResp = filterResponsable === 'Todos' || act.responsable === filterResponsable;
+      const matchesProg = filterPrograma === 'Todos' || act.programas.includes(filterPrograma);
+      const matchesFase = filterFase === 'Todos' || act.fase === filterFase;
+      const matchesSearch = act.actividad.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            act.programas.some(p => p.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesResp && matchesProg && matchesFase && matchesSearch;
+    });
+  }, [activities, filterResponsable, filterPrograma, filterFase, searchTerm]);
+
+  // PAGINACIÓN DE LA MATRIZ DE ACTIVIDADES
+  // Evita renderizar cientos de filas (con sus 12 meses x 2 celdas cada una) de una sola
+  // vez, lo que mantiene la tabla fluida cuando el cronograma crece con el tiempo.
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const totalPages = Math.max(1, Math.ceil(filteredActivities.length / pageSize));
+
+  // Si los filtros cambian y la página actual queda fuera de rango, se ajusta automáticamente.
+  useEffect(() => {
+    setCurrentPage(prev => Math.min(prev, totalPages));
+  }, [totalPages]);
+
+  // Volver a la primera página cada vez que cambian los filtros o la búsqueda,
+  // para no quedar "perdido" en una página vacía de otro contexto de filtro.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterResponsable, filterPrograma, filterFase, searchTerm, pageSize]);
+
+  const paginatedActivities = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredActivities.slice(start, start + pageSize);
+  }, [filteredActivities, currentPage, pageSize]);
+
+  const metrics = useMemo(() => {
+    let totalPlanned = 0;
+    let totalExecuted = 0;
+    let pendingThisMonth = 0;
+
+    activities.forEach(act => {
+      MONTHS.forEach(m => {
+        if (act.cronograma[m].p) {
+          totalPlanned++;
+          if (act.cronograma[m].e) {
+            totalExecuted++;
+          } else {
+            pendingThisMonth++;
+          }
+        }
+      });
+    });
+
+    const completionRate = totalPlanned > 0 ? (totalExecuted / totalPlanned) * 100 : 0;
+
+    const phaseMetrics = {
+      PLANEAR: { planned: 0, executed: 0 },
+      HACER: { planned: 0, executed: 0 },
+      VERIFICAR: { planned: 0, executed: 0 },
+      ACTUAR: { planned: 0, executed: 0 }
+    };
+
+    activities.forEach(act => {
+      if (phaseMetrics[act.fase]) {
+        MONTHS.forEach(m => {
+          if (act.cronograma[m].p) {
+            phaseMetrics[act.fase].planned++;
+            if (act.cronograma[m].e) {
+              phaseMetrics[act.fase].executed++;
+            }
+          }
+        });
+      }
+    });
+
+    const monthlyMetrics = MONTHS.map(m => {
+      let planned = 0;
+      let executed = 0;
+      activities.forEach(act => {
+        if (act.cronograma[m].p) {
+          planned++;
+          if (act.cronograma[m].e) {
+            executed++;
+          }
+        }
+      });
+      return { month: m, planned, executed };
+    });
+
+    const responsableMetrics = {};
+    responsibles.forEach(r => {
+      responsableMetrics[r] = { planned: 0, executed: 0, count: 0 };
+    });
+
+    activities.forEach(act => {
+      const resp = act.responsable;
+      if (!responsableMetrics[resp]) {
+        responsableMetrics[resp] = { planned: 0, executed: 0, count: 0 };
+      }
+      responsableMetrics[resp].count++;
+      MONTHS.forEach(m => {
+        if (act.cronograma[m].p) {
+          responsableMetrics[resp].planned++;
+          if (act.cronograma[m].e) {
+            responsableMetrics[resp].executed++;
+          }
+        }
+      });
+    });
+
+    return {
+      totalPlanned,
+      totalExecuted,
+      pendingThisMonth,
+      completionRate,
+      phaseMetrics,
+      monthlyMetrics,
+      responsableMetrics
+    };
+  }, [activities, responsibles]);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased flex flex-col">
+      
+      {/* HEADER DE LA APLICACIÓN */}
+      <header className="bg-emerald-900 text-white shadow-lg border-b border-emerald-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-700 p-2.5 rounded-xl text-emerald-100 shadow-inner">
+              <FileSpreadsheet className="h-7 w-7" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-300">SISTEMA GESTIÓN AMBIENTAL 2026</span>
+              <h1 className="text-2xl font-black tracking-tight">Control & Cumplimiento SGA</h1>
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-300/80 mt-0.5" title="Los datos se guardan automáticamente en este navegador (localStorage). Use 'Guardar Copia JSON' para respaldarlos fuera del navegador o compartirlos con otro equipo.">
+                <Save className="h-3 w-3" />
+                {lastSavedAt
+                  ? `Guardado automáticamente ${formatRelativeTime(lastSavedAt)} en este navegador`
+                  : 'Los cambios se guardarán automáticamente en este navegador'}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-2">
+            <button 
+              onClick={handleDownloadCSV}
+              title="Exportar base actual a formato de hoja de cálculo CSV"
+              className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold bg-emerald-800 hover:bg-emerald-700 text-white border border-emerald-600 rounded-lg transition-all shadow-sm"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Exportar CSV
+            </button>
+            <button 
+              onClick={handleExportBackup}
+              title="Guardar estado del sistema en archivo JSON para recuperar después o llevarlo a otro equipo/navegador"
+              className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold bg-emerald-800 hover:bg-emerald-700 text-white border border-emerald-600 rounded-lg transition-all shadow-sm"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              Guardar Copia JSON
+            </button>
+            <button 
+              onClick={triggerImportClick}
+              title="Restaurar el cronograma cargando un archivo JSON de respaldo o planilla CSV"
+              className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-200 rounded-lg transition-all shadow-sm"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Importar
+            </button>
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleImportFile}
+              accept=".json,.csv"
+              className="hidden"
+            />
+            <button
+              onClick={handleResetLocalData}
+              title="Borrar los datos guardados en este navegador y restaurar los valores de fábrica"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-emerald-950/60 hover:bg-red-900/60 text-emerald-200 hover:text-white border border-emerald-700 rounded-lg transition-all shadow-sm"
+            >
+              <HardDriveDownload className="h-3.5 w-3.5" />
+            </button>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={programTypes.length === 0}
+              title={programTypes.length === 0 ? 'Registre al menos un programa antes de crear actividades' : undefined}
+              className={`flex items-center gap-1 px-4 py-2 text-xs font-bold rounded-lg transition-all shadow-md ml-2 ${
+                programTypes.length === 0
+                  ? 'bg-emerald-950/40 text-emerald-400 cursor-not-allowed'
+                  : 'bg-white hover:bg-emerald-50 text-emerald-900'
+              }`}
+            >
+              <Plus className="h-4 w-4" />
+              Nueva Actividad
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* MENÚ DE NAVEGACIÓN PRINCIPAL */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all ${
+                activeTab === 'dashboard' 
+                  ? 'border-emerald-600 text-emerald-700' 
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              Dashboard General
+            </button>
+            <button
+              onClick={() => setActiveTab('responsables')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all ${
+                activeTab === 'responsables' 
+                  ? 'border-emerald-600 text-emerald-700' 
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Cumplimiento por Persona
+            </button>
+            <button
+              onClick={() => setActiveTab('actividades')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all ${
+                activeTab === 'actividades' 
+                  ? 'border-emerald-600 text-emerald-700' 
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <Calendar className="h-4 w-4" />
+              Matriz Interactiva
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+
+        {/* TAB 1: DASHBOARD GENERAL */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            
+            {/* KPI CARDS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+              
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Cumplimiento Global</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-900">{metrics.completionRate.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                    <div 
+                      className="bg-emerald-600 h-1.5 rounded-full transition-all duration-500" 
+                      style={{ width: `${metrics.completionRate}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Planificadas</span>
+                  <h3 className="text-3xl font-black text-slate-900">{metrics.totalPlanned}</h3>
+                  <span className="text-xs text-slate-500">Actividades programadas</span>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
+                  <Calendar className="h-6 w-6" />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Ejecutadas</span>
+                  <h3 className="text-3xl font-black text-emerald-600">{metrics.totalExecuted}</h3>
+                  <span className="text-xs text-slate-500">Metas alcanzadas con éxito</span>
+                </div>
+                <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
+                  <CheckCircle className="h-6 w-6" />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Pendientes</span>
+                  <h3 className="text-3xl font-black text-amber-600">{metrics.pendingThisMonth}</h3>
+                  <span className="text-xs text-slate-500">Requieren gestión ágil</span>
+                </div>
+                <div className="bg-amber-50 p-3 rounded-xl text-amber-600">
+                  <Clock className="h-6 w-6" />
+                </div>
+              </div>
+
+            </div>
+
+            {/* SECCIÓN INTERMEDIA: GRÁFICOS PERSONALIZADOS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* CUMPLIMIENTO POR FASE PHVA (CICLO DE MEJORA CONTINUA) */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                    <Layers className="h-2.5 w-2.5 text-emerald-600" />
+                    Cumplimiento Ciclo PHVA
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-6">Eficiencia dividida según etapas estratégicas</p>
+                  
+                  <div className="space-y-5">
+                    {['PLANEAR', 'HACER', 'VERIFICAR', 'ACTUAR'].map(fase => {
+                      const stats = metrics.phaseMetrics[fase] || { planned: 0, executed: 0 };
+                      const pct = stats.planned > 0 ? (stats.executed / stats.planned) * 100 : 0;
+                      
+                      let phaseColor = 'bg-blue-600';
+                      let phaseBg = 'bg-blue-50 text-blue-800';
+                      if (fase === 'HACER') { phaseColor = 'bg-emerald-600'; phaseBg = 'bg-emerald-50 text-emerald-800'; }
+                      if (fase === 'VERIFICAR') { phaseColor = 'bg-amber-600'; phaseBg = 'bg-amber-50 text-amber-800'; }
+                      if (fase === 'ACTUAR') { phaseColor = 'bg-purple-600'; phaseBg = 'bg-purple-50 text-purple-800'; }
+
+                      return (
+                        <div key={fase} className="space-y-1.5">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase ${phaseBg}`}>
+                              {fase}
+                            </span>
+                            <span className="font-semibold text-slate-700">
+                              {stats.executed}/{stats.planned} ({pct.toFixed(0)}%)
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-2.5">
+                            <div 
+                              className={`${phaseColor} h-2.5 rounded-full transition-all duration-500`} 
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-5 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-4 rounded-b-2xl flex items-start gap-2.5 text-xs text-slate-500">
+                  <AlertCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    El ciclo <strong>Planear</strong> presenta el mayor índice de cumplimiento actual, mientras que las fases de <strong>Verificar</strong> muestran tareas programadas para el segundo semestre.
+                  </span>
+                </div>
+              </div>
+
+              {/* GRÁFICO DE BARRAS MENSUALES (PLANIFICADO VS EJECUTADO) */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                      <BarChart3 className="h-2.5 w-2.5 text-emerald-600" />
+                      Avance y Planificación Mensual
+                    </h3>
+                    <p className="text-xs text-slate-500">Distribución de actividades planificadas (P) frente a ejecutadas (E)</p>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="flex items-center gap-1.5 text-slate-500">
+                      <span className="w-3 h-3 bg-slate-200 rounded-xs inline-block"></span>
+                      Programado
+                    </span>
+                    <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                      <span className="w-3 h-3 bg-emerald-600 rounded-xs inline-block"></span>
+                      Ejecutado
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative h-64 flex items-end gap-2 pt-6">
+                  {metrics.monthlyMetrics.map((data, index) => {
+                    const maxVal = Math.max(...metrics.monthlyMetrics.map(m => m.planned), 4);
+                    const pHeight = (data.planned / maxVal) * 100;
+                    const eHeight = (data.executed / maxVal) * 100;
+
+                    return (
+                      <div key={data.month} className="flex-1 flex flex-col items-center h-full justify-end group">
+                        <div className="absolute bottom-full mb-2 bg-slate-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 shadow-md flex flex-col gap-0.5 items-center z-10">
+                          <span className="font-bold">{data.month}</span>
+                          <span>Prog: {data.planned}</span>
+                          <span className="text-emerald-300 font-semibold">Ejec: {data.executed}</span>
+                        </div>
+
+                        <div className="w-full flex items-end justify-center gap-1 h-full pb-2">
+                          <div 
+                            className="w-1/2 bg-slate-200 group-hover:bg-slate-300 transition-all rounded-t-sm"
+                            style={{ height: `${pHeight}%` }}
+                          />
+                          <div 
+                            className="w-1/2 bg-emerald-600 group-hover:bg-emerald-700 transition-all rounded-t-sm"
+                            style={{ height: `${eHeight}%` }}
+                          />
+                        </div>
+
+                        <span className="text-[10px] text-slate-400 font-medium rotate-45 sm:rotate-0 origin-center">
+                          {data.month.substring(0, 3)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* SECCIÓN INFERIOR: RANKING DE LIDERES (RESPONSABLES) Y RESUMEN PROGRAMAS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* DESEMPEÑO POR RESPONSABLE */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
+                <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                  <Award className="h-2.5 w-2.5 text-emerald-600" />
+                  Desempeño y Cumplimiento de Responsables
+                </h3>
+                <p className="text-xs text-slate-500 mb-6">Porcentaje de éxito basado en sus tareas asignadas</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(metrics.responsableMetrics).map(([name, stats]) => {
+                    const pct = stats.planned > 0 ? (stats.executed / stats.planned) * 100 : 0;
+                    
+                    return (
+                      <div key={name} className="border border-slate-100 p-4 rounded-xl hover:border-emerald-100 transition-all bg-slate-50/50">
+                        <div className="flex items-center gap-3 mb-2.5">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-sm shadow-inner">
+                            {name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-800 text-sm">{name}</h4>
+                            <p className="text-[11px] text-slate-400">{stats.count} actividades en total</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">Progreso de ejecución:</span>
+                            <span className="font-bold text-slate-800">{pct.toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200/70 rounded-full h-2">
+                            <div 
+                              className="bg-emerald-600 h-2 rounded-full" 
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-slate-400 pt-1">
+                            <span>Planificadas: {stats.planned}</span>
+                            <span>Ejecutadas: {stats.executed}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* RESUMEN POR PROGRAMA */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 className="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                  <Filter className="h-2.5 w-2.5 text-emerald-600" />
+                  Cumplimiento por Programa
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">Avance de objetivos por tipo de plan (Soporta multiprogramas)</p>
+
+                <div className="divide-y divide-slate-100">
+                  {programTypes.length === 0 ? (
+                    <div className="py-6 text-center text-slate-400 text-xs">
+                      No hay programas registrados. Agregue uno desde la pestaña "Actividades".
+                    </div>
+                  ) : programTypes.map(({ code: prog, label, color }) => {
+                    let planned = 0;
+                    let executed = 0;
+                    activities.forEach(act => {
+                      if (act.programas.includes(prog)) {
+                        MONTHS.forEach(m => {
+                          if (act.cronograma[m].p) {
+                            planned++;
+                            if (act.cronograma[m].e) {
+                              executed++;
+                            }
+                          }
+                        });
+                      }
+                    });
+
+                    const pct = planned > 0 ? (executed / planned) * 100 : 0;
+                    const dotClass = getColorClasses(color).dot;
+
+                    return (
+                      <div key={prog} className="py-3 flex items-center justify-between first:pt-0 last:pb-0">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${dotClass} shrink-0`} />
+                            {label}
+                          </span>
+                          <div className="text-[11px] text-slate-400">
+                            {executed} de {planned} completadas en este plan
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                            pct >= 80 ? 'text-emerald-700 bg-emerald-50' : 
+                            pct >= 50 ? 'text-amber-700 bg-amber-50' : 'text-slate-500 bg-slate-50'
+                          }`}>
+                            {pct.toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 2: CUMPLIMIENTO POR PERSONA */}
+        {activeTab === 'responsables' && (
+          <div className="space-y-6">
+            
+            {/* PANEL DE GESTIÓN DE PERSONAL (NUEVO REQUERIMIENTO) */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <Users className="h-5 w-5 text-emerald-600" />
+                    Gestión de Integrantes del SGA
+                  </h3>
+                  <p className="text-xs text-slate-500">Agregue nuevos responsables para asignar actividades, o elimine perfiles del equipo de trabajo.</p>
+                </div>
+
+                <form onSubmit={handleAddPerson} className="flex gap-2 w-full md:w-auto">
+                  <input 
+                    type="text" 
+                    placeholder="Nombre completo..."
+                    value={newPersonName}
+                    onChange={(e) => setNewPersonName(e.target.value)}
+                    className="flex-1 md:w-64 p-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/25 outline-none transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shrink-0"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Agregar Persona
+                  </button>
+                </form>
+              </div>
+
+              {/* Lista compacta de personas actuales con opción de eliminar rápida */}
+              <div className="flex flex-wrap gap-2.5 pt-2 border-t border-slate-50">
+                <span className="text-xs text-slate-400 font-semibold flex items-center shrink-0">Equipo Registrado:</span>
+                {responsibles.map(r => (
+                  <span 
+                    key={r} 
+                    className="text-xs font-semibold text-slate-700 bg-slate-100 py-1 pl-3 pr-2 rounded-full flex items-center gap-2"
+                  >
+                    {r}
+                    <button 
+                      onClick={() => handleDeletePerson(r)}
+                      title={`Dar de baja a ${r}`}
+                      className="p-0.5 rounded-full hover:bg-red-100 hover:text-red-600 text-slate-400 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* SELECCIÓN Y FILTRO DE RESPONSABLE */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Seguimiento de Asignación Personal</h2>
+                <p className="text-xs text-slate-500">Analice la carga de trabajo y tasa de cumplimiento de cada colaborador activo</p>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                  <Filter className="h-3.5 w-3.5" /> Filtrar Vista:
+                </span>
+                <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setFilterResponsable('Todos')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      filterResponsable === 'Todos' 
+                        ? 'bg-white text-emerald-900 shadow-xs' 
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {responsibles.map(name => (
+                    <button
+                      key={name}
+                      onClick={() => setFilterResponsable(name)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        filterResponsable === name 
+                          ? 'bg-white text-emerald-900 shadow-xs' 
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* PANEL DE DETALLE POR PERSONA */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {responsibles.filter(n => filterResponsable === 'Todos' || n === filterResponsable).map(name => {
+                const stats = metrics.responsableMetrics[name] || { planned: 0, executed: 0, count: 0 };
+                const rate = stats.planned > 0 ? (stats.executed / stats.planned) * 100 : 0;
+                
+                const myActivities = activities.filter(a => a.responsable === name);
+
+                return (
+                  <div key={name} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col lg:col-span-3">
+                    
+                    {/* Header del Colaborador */}
+                    <div className="bg-gradient-to-r from-emerald-800 to-emerald-950 p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 font-black text-xl flex items-center justify-center text-emerald-200 shadow-md">
+                          {name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-black tracking-tight">{name}</h3>
+                            <button
+                              onClick={() => handleDeletePerson(name)}
+                              title={`Eliminar a ${name}`}
+                              className="bg-red-500/10 hover:bg-red-500/30 p-1.5 rounded-lg text-red-200 hover:text-white transition-all ml-1.5"
+                            >
+                              <UserMinus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-emerald-300">Líder SGA • Administrativo</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 bg-white/5 backdrop-blur-xs py-2 px-4 rounded-xl border border-white/10">
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-bold text-emerald-300 block">Tasa de Compliance</span>
+                          <span className="text-2xl font-black">{rate.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-10 h-10 rounded-full border-4 border-emerald-500/30 flex items-center justify-center relative">
+                          <div 
+                            className="absolute inset-0 rounded-full border-4 border-white transition-all duration-500"
+                            style={{ clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 100%)`, transform: `rotate(${rate * 3.6}deg)` }}
+                          />
+                          <Check className="h-4 w-4 text-emerald-200" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-px bg-slate-100 border-b border-slate-100">
+                      <div className="bg-white p-4 text-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Actividades</span>
+                        <span className="text-xl font-bold text-slate-800">{stats.count}</span>
+                      </div>
+                      <div className="bg-white p-4 text-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Completadas</span>
+                        <span className="text-xl font-bold text-emerald-600">{stats.executed}</span>
+                      </div>
+                      <div className="bg-white p-4 text-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pendientes de Ejecución</span>
+                        <span className="text-xl font-bold text-amber-600">{stats.planned - stats.executed}</span>
+                      </div>
+                    </div>
+
+                    {/* Detalle de Tareas de la Persona */}
+                    <div className="p-6">
+                      <h4 className="font-bold text-slate-800 text-sm mb-4">Portafolio de Actividades y Planificación Mensual</h4>
+                      
+                      {myActivities.length === 0 ? (
+                        <div className="text-center py-6 text-slate-400 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center gap-1.5">
+                          <Briefcase className="h-6 w-6 text-slate-300" />
+                          <span className="text-xs">No tiene ninguna actividad asignada en el cronograma.</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-3.5">
+                          {myActivities.map(act => {
+                            return (
+                              <div key={act.id} className="p-4 border border-slate-100 hover:border-slate-200 rounded-xl bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-1.5 md:max-w-xl">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                      act.fase === 'PLANEAR' ? 'bg-blue-50 text-blue-700' :
+                                      act.fase === 'HACER' ? 'bg-emerald-50 text-emerald-700' :
+                                      act.fase === 'VERIFICAR' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'
+                                    }`}>
+                                      {act.fase}
+                                    </span>
+                                    {act.programas.map(prog => (
+                                      <span key={prog} title={getProgramLabel(prog)} className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${getProgramBadgeClasses(prog)}`}>
+                                        {prog}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="font-semibold text-slate-800 text-sm leading-relaxed">{act.actividad}</p>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 overflow-x-auto py-1 shrink-0">
+                                  {MONTHS.map(m => {
+                                    const plan = act.cronograma[m];
+                                    if (!plan.p) return null;
+
+                                    return (
+                                      <div 
+                                        key={m} 
+                                        className={`px-2.5 py-1.5 rounded-lg border flex flex-col items-center gap-0.5 min-w-[55px] ${
+                                          plan.e 
+                                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                                            : 'bg-amber-50 border-amber-200 text-amber-800'
+                                        }`}
+                                      >
+                                        <span className="text-[9px] font-bold uppercase">{m.substring(0, 3)}</span>
+                                        <span className="text-[10px] font-extrabold flex items-center gap-0.5">
+                                          {plan.e ? <Check className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                                          {plan.e ? 'Listo' : 'Pend'}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                );
+              })}
+
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 3: MATRIZ DETALLADA DE ACTIVIDADES */}
+        {activeTab === 'actividades' && (
+          <div className="space-y-6">
+
+            {/* PANEL DE GESTIÓN DE PROGRAMAS (NUEVO REQUERIMIENTO) */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-emerald-600" />
+                    Gestión de Tipos de Programa
+                  </h3>
+                  <p className="text-xs text-slate-500">Cree nuevos tipos de programa para poder asociarlos a las actividades del cronograma. Haga clic en el lápiz de cualquier chip para renombrarlo o cambiarle el color.</p>
+                </div>
+
+                <form onSubmit={handleAddProgramType} className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Sigla, ej. PGS"
+                    value={newProgramCode}
+                    onChange={(e) => setNewProgramCode(e.target.value)}
+                    maxLength={15}
+                    className="sm:w-32 p-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/25 outline-none transition-all uppercase"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Nombre descriptivo (opcional)"
+                    value={newProgramLabel}
+                    onChange={(e) => setNewProgramLabel(e.target.value)}
+                    className="flex-1 sm:w-56 p-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/25 outline-none transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Agregar Programa
+                  </button>
+                </form>
+              </div>
+
+              {/* Lista de programas actuales: vista normal o formulario de edición inline */}
+              <div className="flex flex-wrap gap-2.5 pt-2 border-t border-slate-50 items-start">
+                <span className="text-xs text-slate-400 font-semibold flex items-center h-7 shrink-0">Programas Registrados:</span>
+                {programTypes.length === 0 && (
+                  <span className="text-xs text-slate-400 italic flex items-center h-7">Ningún programa registrado. Agregue uno para poder crear actividades.</span>
+                )}
+                {programTypes.map((program) => {
+                  const { code, label } = program;
+                  const colorClasses = getColorClasses(program.color);
+
+                  // MODO EDICIÓN INLINE para este programa específico
+                  if (editingProgramCode === code) {
+                    return (
+                      <form
+                        key={code}
+                        onSubmit={handleSaveEditProgramType}
+                        className="flex flex-wrap items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5 w-full sm:w-auto"
+                      >
+                        <input
+                          type="text"
+                          value={editProgramDraft.code}
+                          onChange={(e) => setEditProgramDraft(prev => ({ ...prev, code: e.target.value }))}
+                          maxLength={15}
+                          className="w-24 p-1.5 text-xs border border-slate-200 rounded-lg uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                          placeholder="Sigla"
+                        />
+                        <input
+                          type="text"
+                          value={editProgramDraft.label}
+                          onChange={(e) => setEditProgramDraft(prev => ({ ...prev, label: e.target.value }))}
+                          className="w-44 p-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                          placeholder="Nombre descriptivo"
+                        />
+                        <div className="flex items-center gap-1 px-1">
+                          {PROGRAM_COLOR_PALETTE.map(c => (
+                            <button
+                              type="button"
+                              key={c.id}
+                              title={c.name}
+                              onClick={() => setEditProgramDraft(prev => ({ ...prev, color: c.id }))}
+                              className={`w-5 h-5 rounded-full ${c.dot} flex items-center justify-center ring-offset-1 transition-all ${
+                                editProgramDraft.color === c.id ? 'ring-2 ring-slate-400' : 'opacity-60 hover:opacity-100'
+                              }`}
+                            >
+                              {editProgramDraft.color === c.id && <Check className="h-3 w-3 text-white" />}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="submit"
+                          title="Guardar cambios"
+                          className="p-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition-colors"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEditProgramType}
+                          title="Cancelar"
+                          className="p-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-600 transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </form>
+                    );
+                  }
+
+                  // MODO NORMAL (chip de solo lectura con acciones de editar/eliminar)
+                  return (
+                    <span
+                      key={code}
+                      title={label}
+                      className={`text-xs font-semibold py-1 pl-3 pr-1.5 rounded-full flex items-center gap-1.5 border ${colorClasses.chip}`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${colorClasses.dot} shrink-0`} />
+                      {label}
+                      <button
+                        onClick={() => handleStartEditProgramType(program)}
+                        title={`Editar el programa ${code}`}
+                        className="p-0.5 rounded-full hover:bg-white/70 transition-colors"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProgramType(code)}
+                        title={`Eliminar el programa ${code}`}
+                        className="p-0.5 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* HERRAMIENTAS DE CONTROL, BÚSQUEDA Y FILTRADO */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800">Cronograma General & Matriz de Gestión</h2>
+                  <p className="text-xs text-slate-500">Haga clic en las casillas <span className="font-bold text-slate-700">P</span> (Planificado) u <span className="font-bold text-emerald-700">E</span> (Ejecutado) para actualizar el estado del plan de manera instantánea</p>
+                </div>
+                
+                <button 
+                  onClick={() => setIsAddModalOpen(true)}
+                  disabled={programTypes.length === 0}
+                  title={programTypes.length === 0 ? 'Registre al menos un programa antes de crear actividades' : undefined}
+                  className={`text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+                    programTypes.length === 0 ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-800 hover:bg-emerald-700 animate-pulse'
+                  }`}
+                >
+                  <Plus className="h-4 w-4" /> Nueva Actividad
+                </button>
+              </div>
+
+              {/* FILTROS INTERACTIVOS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-slate-400">
+                    <Search className="h-4 w-4" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Buscar actividad o programa..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50/50 focus:bg-white"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Resp.</span>
+                  <select
+                    value={filterResponsable}
+                    onChange={(e) => setFilterResponsable(e.target.value)}
+                    className="w-full p-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
+                  >
+                    <option value="Todos">Todos</option>
+                    {responsibles.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Prog.</span>
+                  <select
+                    value={filterPrograma}
+                    onChange={(e) => setFilterPrograma(e.target.value)}
+                    className="w-full p-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
+                  >
+                    {programsList.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Fase</span>
+                  <select
+                    value={filterFase}
+                    onChange={(e) => setFilterFase(e.target.value)}
+                    className="w-full p-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
+                  >
+                    {fasesList.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* TABLA MATRIZ ENORME */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  
+                  {/* CABECERA TABLA */}
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold uppercase text-slate-400 tracking-wider">
+                      <th className="py-4 px-4 min-w-[280px]">Actividad / Programas SGA</th>
+                      {MONTHS.map(m => (
+                        <th key={m} className="py-4 px-1 text-center border-l border-slate-100 min-w-[70px]">
+                          <span className="block text-slate-800 font-extrabold text-xs">{m.substring(0, 3)}</span>
+                          <div className="flex justify-center gap-2.5 text-[9px] font-bold text-slate-400 mt-1">
+                            <span>P</span>
+                            <span>E</span>
+                          </div>
+                        </th>
+                      ))}
+                      <th className="py-4 px-4 text-center border-l border-slate-100 min-w-[100px]">Progreso</th>
+                      <th className="py-4 px-4 text-center min-w-[100px]">Acciones</th>
+                    </tr>
+                  </thead>
+
+                  {/* CUERPO DE TABLA */}
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {filteredActivities.length === 0 ? (
+                      <tr>
+                        <td colSpan={15} className="py-12 text-center text-slate-400">
+                          <AlertCircle className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                          No se encontraron actividades bajo los filtros aplicados.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedActivities.map(act => {
+                        let planned = 0;
+                        let executed = 0;
+                        MONTHS.forEach(m => {
+                          if (act.cronograma[m].p) {
+                            planned++;
+                            if (act.cronograma[m].e) {
+                              executed++;
+                            }
+                          }
+                        });
+                        const progressPct = planned > 0 ? (executed / planned) * 100 : 0;
+
+                        return (
+                          <tr key={act.id} className="hover:bg-slate-50/50 transition-colors">
+                            {/* Celda de Información con múltiples tags de programa */}
+                            <td className="py-4 px-4">
+                              <div className="space-y-1.5">
+                                <p className="font-semibold text-slate-800 text-xs leading-relaxed max-w-sm">
+                                  {act.actividad}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                                  <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${
+                                    act.fase === 'PLANEAR' ? 'bg-blue-50 text-blue-700' :
+                                    act.fase === 'HACER' ? 'bg-emerald-50 text-emerald-700' :
+                                    act.fase === 'VERIFICAR' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'
+                                  }`}>
+                                    {act.fase}
+                                  </span>
+                                  <span className="font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                                    {act.responsable}
+                                  </span>
+                                  {act.programas.map(prog => (
+                                    <span key={prog} title={getProgramLabel(prog)} className={`font-extrabold px-1.5 py-0.5 rounded border text-[9px] ${getProgramBadgeClasses(prog)}`}>
+                                      {prog}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Celdas de Meses (Interactivas) */}
+                            {MONTHS.map(m => {
+                              const plan = act.cronograma[m];
+                              return (
+                                <td key={m} className="py-4 px-1 border-l border-slate-100 text-center">
+                                  <div className="flex justify-center items-center gap-1.5">
+                                    <button
+                                      onClick={() => handleToggleCell(act.id, m, 'p')}
+                                      className={`w-6 h-6 rounded text-[10px] font-black transition-all flex items-center justify-center ${
+                                        plan.p 
+                                          ? 'bg-slate-700 text-white shadow-xs' 
+                                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                      }`}
+                                      title={`Alternar Planificado para ${m}`}
+                                    >
+                                      P
+                                    </button>
+
+                                    <button
+                                      disabled={!plan.p}
+                                      onClick={() => handleToggleCell(act.id, m, 'e')}
+                                      className={`w-6 h-6 rounded text-[10px] font-black transition-all flex items-center justify-center ${
+                                        plan.e 
+                                          ? 'bg-emerald-600 text-white shadow-xs' 
+                                          : !plan.p 
+                                            ? 'bg-slate-50 text-slate-200 cursor-not-allowed' 
+                                            : 'bg-emerald-50 text-emerald-400 hover:bg-emerald-100'
+                                      }`}
+                                      title={plan.p ? `Alternar Ejecutado para ${m}` : 'Debe planificar primero'}
+                                    >
+                                      E
+                                    </button>
+                                  </div>
+                                </td>
+                              );
+                            })}
+
+                            {/* Progreso Actividad */}
+                            <td className="py-4 px-4 border-l border-slate-100 text-center">
+                              {planned === 0 ? (
+                                <span className="text-[10px] text-slate-400 italic">No prog.</span>
+                              ) : (
+                                <div className="space-y-1">
+                                  <span className="font-bold text-slate-800">{progressPct.toFixed(0)}%</span>
+                                  <div className="w-16 bg-slate-100 rounded-full h-1.5 mx-auto overflow-hidden">
+                                    <div 
+                                      className="bg-emerald-600 h-1.5 rounded-full" 
+                                      style={{ width: `${progressPct}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-[9px] text-slate-400 block">{executed}/{planned}</span>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Editar / Eliminar Acciones */}
+                            <td className="py-4 px-4 text-center space-x-1.5 whitespace-nowrap">
+                              <button
+                                onClick={() => handleOpenEditModal(act)}
+                                className="text-emerald-700 hover:text-emerald-900 p-1 rounded-lg hover:bg-emerald-50 transition-all inline-flex items-center gap-1"
+                                title="Editar actividad, responsable y programas"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteActivity(act.id, act.actividad)}
+                                className="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-all inline-flex items-center"
+                                title="Eliminar actividad"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+
+                </table>
+              </div>
+
+              {/* CONTROLES DE PAGINACIÓN */}
+              {filteredActivities.length > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 font-semibold">
+                    <span>
+                      Mostrando {Math.min((currentPage - 1) * pageSize + 1, filteredActivities.length)}–{Math.min(currentPage * pageSize, filteredActivities.length)} de {filteredActivities.length} actividades
+                    </span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                      className="p-1.5 text-[11px] border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      title="Actividades por página"
+                    >
+                      <option value={10}>10 / página</option>
+                      <option value={25}>25 / página</option>
+                      <option value={50}>50 / página</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className={`p-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1 ${
+                        currentPage === 1
+                          ? 'bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </button>
+
+                    <span className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg min-w-[80px] text-center">
+                      Página {currentPage} de {totalPages}
+                    </span>
+
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`p-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1 ${
+                        currentPage === totalPages
+                          ? 'bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
+        <p>© 2026 SGA • Sistema Integrado de Gestión Ambiental C.R.A.</p>
+        <p className="mt-1 text-[10px]">Diseñado para el seguimiento dinámico, edición y copias de seguridad de planes de gestión de iniciativas ambientales.</p>
+      </footer>
+
+      {/* MODAL PARA AÑADIR NUEVA ACTIVIDAD */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-black text-slate-900">Crear Nueva Actividad</h3>
+              <button 
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddActivity} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Descripción de la Actividad</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={newActName}
+                  onChange={(e) => setNewActName(e.target.value)}
+                  placeholder="Ej. Realizar seguimiento al cumplimiento de metas de eficiencia energética..."
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              {/* SECCIÓN MULTI-PROGRAMA SIN DROPDOWNS */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Programas Asociados (Selección Múltiple)
+                  </label>
+                  <button 
+                    type="button" 
+                    onClick={() => handleSelectAllPrograms('add')}
+                    className="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold hover:underline"
+                  >
+                    Seleccionar Todos
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mb-3">Haga clic en uno o más botones para asociar la actividad a múltiples planes simultáneamente.</p>
+                
+                <div className="flex flex-wrap gap-2">
+                  {programTypes.map(({ code: prog, label, color }) => {
+                    const isSelected = newActProgs.includes(prog);
+                    const colorClasses = getColorClasses(color);
+                    
+                    return (
+                      <button
+                        type="button"
+                        key={prog}
+                        onClick={() => handleToggleProgramSelection(prog, 'add')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+                          isSelected 
+                            ? `${colorClasses.solid} shadow-sm` 
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className={`w-3 h-3 rounded-full flex items-center justify-center border ${
+                          isSelected ? 'bg-white/30 border-white/50' : 'bg-slate-100 border-slate-300'
+                        }`}>
+                          {isSelected && <Check className="h-2.5 w-2.5 text-white font-extrabold" />}
+                        </div>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {programTypes.length === 0 && (
+                  <p className="text-red-500 text-[10px] mt-2 font-semibold">⚠️ No hay programas registrados. Agréguelos antes de continuar.</p>
+                )}
+                {newActProgs.length === 0 && (
+                  <p className="text-red-500 text-[10px] mt-2 font-semibold">⚠️ Debe seleccionar al menos un programa para continuar.</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Responsable</label>
+                  <select
+                    value={newActResp}
+                    onChange={(e) => setNewActResp(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    {responsibles.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fase del Ciclo PHVA</label>
+                  <select
+                    value={newActFase}
+                    onChange={(e) => setNewActFase(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <option value="PLANEAR">PLANEAR</option>
+                    <option value="HACER">HACER</option>
+                    <option value="VERIFICAR">VERIFICAR</option>
+                    <option value="ACTUAR">ACTUAR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Recurso</label>
+                  <select
+                    value={newActRec}
+                    onChange={(e) => setNewActRec(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none"
+                  >
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Presupuestal">Presupuestal</option>
+                    <option value="Tecnológico">Tecnológico</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={newActProgs.length === 0}
+                  className={`px-5 py-2 text-xs font-bold text-white rounded-xl transition-all shadow-md ${
+                    newActProgs.length === 0 ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-800 hover:bg-emerald-700'
+                  }`}
+                >
+                  Guardar Actividad
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PARA EDITAR ACTIVIDAD (NUEVO REQUERIMIENTO) */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <Edit2 className="h-5 w-5 text-emerald-600" />
+                Editar Actividad
+              </h3>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditActivity} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Descripción de la Actividad</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={editActName}
+                  onChange={(e) => setEditActName(e.target.value)}
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              {/* SECCIÓN SELECCIÓN MULTI-PROGRAMA EDITAR */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Programas Asociados (Selección Múltiple)
+                  </label>
+                  <button 
+                    type="button" 
+                    onClick={() => handleSelectAllPrograms('edit')}
+                    className="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold hover:underline"
+                  >
+                    Seleccionar Todos
+                  </button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {programTypes.map(({ code: prog, label, color }) => {
+                    const isSelected = editActProgs.includes(prog);
+                    const colorClasses = getColorClasses(color);
+                    
+                    return (
+                      <button
+                        type="button"
+                        key={prog}
+                        onClick={() => handleToggleProgramSelection(prog, 'edit')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border relative ${
+                          isSelected 
+                            ? `${colorClasses.solid} shadow-sm` 
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className={`w-3 h-3 rounded-full flex items-center justify-center border ${
+                          isSelected ? 'bg-white/30 border-white/50' : 'bg-slate-100 border-slate-300'
+                        }`}>
+                          {isSelected && <Check className="h-2.5 w-2.5 text-white font-extrabold" />}
+                        </div>
+                        {label}
+                      </button>
+                    );
+                  })}
+                  {/* Códigos heredados que ya no están registrados como tipo de programa,
+                      pero que la actividad aún conserva (se permite deseleccionarlos). */}
+                  {editActProgs.filter(p => !programTypes.some(pt => pt.code === p)).map(prog => (
+                    <button
+                      type="button"
+                      key={prog}
+                      onClick={() => handleToggleProgramSelection(prog, 'edit')}
+                      title="Este programa ya no está registrado en el sistema"
+                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-dashed border-amber-300 bg-amber-50 text-amber-700"
+                    >
+                      <AlertCircle className="h-3 w-3" />
+                      {prog} (no registrado)
+                    </button>
+                  ))}
+                </div>
+                {editActProgs.length === 0 && (
+                  <p className="text-red-500 text-[10px] mt-2 font-semibold">⚠️ Debe seleccionar al menos un programa para poder actualizar.</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Responsable</label>
+                  <select
+                    value={editActResp}
+                    onChange={(e) => setEditActResp(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    {responsibles.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fase del Ciclo PHVA</label>
+                  <select
+                    value={editActFase}
+                    onChange={(e) => setEditActFase(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <option value="PLANEAR">PLANEAR</option>
+                    <option value="HACER">HACER</option>
+                    <option value="VERIFICAR">VERIFICAR</option>
+                    <option value="ACTUAR">ACTUAR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tipo de Recurso</label>
+                  <select
+                    value={editActRec}
+                    onChange={(e) => setEditActRec(e.target.value)}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none"
+                  >
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Presupuestal">Presupuestal</option>
+                    <option value="Tecnológico">Tecnológico</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editActProgs.length === 0}
+                  className={`px-5 py-2 text-xs font-bold text-white rounded-xl transition-all shadow-md ${
+                    editActProgs.length === 0 ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-800 hover:bg-emerald-700'
+                  }`}
+                >
+                  Actualizar Actividad
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST SYSTEM (PREVENT BROWSER ALERTS) */}
+      {toast.show && (
+        <div className="fixed bottom-5 right-5 z-50 animate-bounce">
+          <div className={`p-4 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2.5 ${
+            toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRMATION MODAL SYSTEM (PREVENT BROWSER CONFIRMS) */}
+      {customConfirm.show && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-2 text-amber-600 mb-3">
+              <AlertCircle className="h-5 w-5" />
+              <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">{customConfirm.title}</h4>
+            </div>
+            
+            <p className="text-slate-600 text-xs leading-relaxed mb-5">{customConfirm.message}</p>
+
+            {/* If there are specific reassign options (when removing a person or program with active tasks) */}
+            {customConfirm.options ? (
+              <div className="space-y-2 mb-6">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Seleccione el Reasignado:</label>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {customConfirm.options.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => customConfirm.onConfirm(opt.value)}
+                      className="text-left px-3.5 py-2.5 text-xs font-semibold bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-xl transition-all text-slate-700 hover:text-emerald-900"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  {customConfirm.fallbackOption && (
+                    <button
+                      onClick={() => customConfirm.onConfirm(customConfirm.fallbackOption.value)}
+                      className="text-left px-3.5 py-2.5 text-xs font-semibold bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-xl transition-all text-slate-700 hover:text-emerald-900"
+                    >
+                      {customConfirm.fallbackOption.label}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="flex justify-end gap-2.5">
+              <button
+                onClick={customConfirm.onCancel}
+                className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Cancelar
+              </button>
+              {!customConfirm.options && (
+                <button
+                  onClick={customConfirm.onConfirm}
+                  className="px-5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-md"
+                >
+                  Confirmar Acción
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
