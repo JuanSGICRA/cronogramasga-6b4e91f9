@@ -353,9 +353,13 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Indicador de persistencia: cuándo fue la última vez que se guardó en este navegador
+  // Indicador de persistencia: cuándo fue la última vez que se guardó en la nube
   const [lastSavedAt, setLastSavedAt] = useState(() => loadPersistedState()?.savedAt || null);
   const isFirstRender = useRef(true);
+  // Gate: no escribir en la nube hasta terminar la primera carga remota
+  const [remoteReady, setRemoteReady] = useState(false);
+  // savedAt que acabamos de escribir nosotros — para ignorar el eco de realtime
+  const lastLocalSavedAtRef = useRef(null);
   
   // File inputs ref for importing backups
   const fileInputRef = useRef(null);
