@@ -43,6 +43,19 @@
 <script type="text/babel" data-type="module" data-presets="react">
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createClient } from '@supabase/supabase-js';
+
+// ============================================================================
+// LOVABLE CLOUD (base de datos compartida)
+// El estado del cronograma se guarda en una tabla `dashboard_state` (singleton)
+// para que todos los miembros del equipo vean los mismos datos en tiempo real.
+// ============================================================================
+const SUPABASE_URL = 'https://zfroepaujrbobxaaxedn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_crCzRAi7UFRNTgi35wUbNA_lIRGW3OB';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
+const REMOTE_ROW_ID = 'global';
 import {
   BarChart3,
   Users,
