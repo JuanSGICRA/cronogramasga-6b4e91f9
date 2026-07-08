@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,24 +21,38 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: DashboardRedirect,
+  component: DashboardGate,
 });
 
-function DashboardRedirect() {
+function DashboardGate() {
+  const [status, setStatus] = useState<"checking" | "redirecting">("checking");
+
   useEffect(() => {
-    window.location.replace("/dashboard.html");
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      setStatus("redirecting");
+      if (data.session) {
+        window.location.replace("/dashboard.html");
+      } else {
+        window.location.replace("/auth");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          Cargando Sistema de Gestión Ambiental…
+          {status === "checking" ? "Verificando sesión…" : "Redirigiendo…"}
         </p>
         <p className="mt-3 text-xs text-muted-foreground">
           Si no eres redirigido,{" "}
-          <a href="/dashboard.html" className="underline text-primary">
-            abre el dashboard aquí
+          <a href="/auth" className="underline text-primary">
+            inicia sesión aquí
           </a>
           .
         </p>
