@@ -86,6 +86,29 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 const REMOTE_ROW_ID = 'global';
+
+// Barra de sesión: mostrar email y permitir cerrar sesión.
+(async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const email = data.session?.user?.email;
+    const emailEl = document.getElementById('session-email');
+    if (emailEl) emailEl.textContent = email || 'Sesión activa';
+    if (!data.session) { window.location.replace('/auth'); return; }
+  } catch (e) { /* ignore */ }
+  const btn = document.getElementById('session-signout');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try { await supabase.auth.signOut(); } catch (e) { /* ignore */ }
+      window.location.replace('/auth');
+    });
+  }
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') window.location.replace('/auth');
+  });
+})();
+
 import {
   BarChart3,
   Users,
