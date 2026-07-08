@@ -17,7 +17,8 @@
     "react/": "https://esm.sh/react@18.3.1/",
     "react-dom": "https://esm.sh/react-dom@18.3.1",
     "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.383.0?external=react"
+    "lucide-react": "https://esm.sh/lucide-react@0.383.0?external=react",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.4"
   }
 }
 </script>
@@ -42,6 +43,19 @@
 <script type="text/babel" data-type="module" data-presets="react">
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createClient } from '@supabase/supabase-js';
+
+// ============================================================================
+// LOVABLE CLOUD (base de datos compartida)
+// El estado del cronograma se guarda en una tabla `dashboard_state` (singleton)
+// para que todos los miembros del equipo vean los mismos datos en tiempo real.
+// ============================================================================
+const SUPABASE_URL = 'https://zfroepaujrbobxaaxedn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_crCzRAi7UFRNTgi35wUbNA_lIRGW3OB';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
+const REMOTE_ROW_ID = 'global';
 import {
   BarChart3,
   Users,
@@ -339,9 +353,13 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Indicador de persistencia: cuándo fue la última vez que se guardó en este navegador
+  // Indicador de persistencia: cuándo fue la última vez que se guardó en la nube
   const [lastSavedAt, setLastSavedAt] = useState(() => loadPersistedState()?.savedAt || null);
   const isFirstRender = useRef(true);
+  // Gate: no escribir en la nube hasta terminar la primera carga remota
+  const [remoteReady, setRemoteReady] = useState(false);
+  // savedAt que acabamos de escribir nosotros — para ignorar el eco de realtime
+  const lastLocalSavedAtRef = useRef(null);
   
   // File inputs ref for importing backups
   const fileInputRef = useRef(null);
@@ -406,36 +424,99 @@ export default function App() {
     });
   }, [programTypes]);
 
-  // PERSISTENCIA REAL EN EL NAVEGADOR (localStorage)
-  // Guarda automáticamente el cronograma, el equipo y los programas cada vez que
-  // cambian, con un pequeño debounce para no escribir en disco en cada click.
-  // Esto evita perder la información al recargar o cerrar accidentalmente la página.
-  // Para compartir entre equipos o varios dispositivos sigue siendo necesario usar
-  // "Exportar Backup" o, idealmente, conectar este estado a una API/base de datos real.
+  // ============================================================================
+  // PERSISTENCIA EN LOVABLE CLOUD (base de datos compartida en tiempo real)
+  // 1) Al montar: hidratar el estado desde la tabla `dashboard_state`.
+  // 2) Al cambiar el estado (con debounce): upsert al servidor + localStorage.
+  // 3) Realtime: si otro usuario edita, refrescamos el estado local.
+  // ============================================================================
+
+  // Hidratación inicial desde la nube + suscripción realtime
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('dashboard_state')
+          .select('state, updated_at')
+          .eq('id', REMOTE_ROW_ID)
+          .maybeSingle();
+        if (error) throw error;
+        if (!cancelled && data && data.state && typeof data.state === 'object') {
+          const s = data.state;
+          if (Array.isArray(s.activities) && s.activities.length > 0) setActivities(s.activities);
+          if (Array.isArray(s.responsibles) && s.responsibles.length > 0) setResponsibles(s.responsibles);
+          if (Array.isArray(s.programTypes) && s.programTypes.length > 0) {
+            setProgramTypes(s.programTypes.map(p => ({ color: 'emerald', ...p })));
+          }
+          if (s.savedAt) setLastSavedAt(s.savedAt);
+          lastLocalSavedAtRef.current = s.savedAt || null;
+        }
+      } catch (err) {
+        console.warn('No se pudo cargar el estado desde la nube:', err);
+      } finally {
+        if (!cancelled) {
+          isFirstRender.current = false;
+          setRemoteReady(true);
+        }
+      }
+    })();
+
+    const channel = supabase
+      .channel('dashboard_state_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'dashboard_state', filter: `id=eq.${REMOTE_ROW_ID}` },
+        (payload) => {
+          const s = payload.new && payload.new.state;
+          if (!s || typeof s !== 'object') return;
+          // Ignorar el eco de nuestra propia escritura
+          if (s.savedAt && s.savedAt === lastLocalSavedAtRef.current) return;
+          if (Array.isArray(s.activities)) setActivities(s.activities);
+          if (Array.isArray(s.responsibles)) setResponsibles(s.responsibles);
+          if (Array.isArray(s.programTypes)) {
+            setProgramTypes(s.programTypes.map(p => ({ color: 'emerald', ...p })));
+          }
+          if (s.savedAt) setLastSavedAt(s.savedAt);
+        })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Guardado automático (debounced) hacia la nube + cache local
+  useEffect(() => {
+    if (!remoteReady) return;
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    const handle = setTimeout(() => {
+    const handle = setTimeout(async () => {
+      const savedAt = new Date().toISOString();
+      const payload = { version: '2026.1', activities, responsibles, programTypes, savedAt };
       try {
-        if (typeof window === 'undefined' || !window.localStorage) return;
-        const savedAt = new Date().toISOString();
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          version: '2026.1',
-          activities,
-          responsibles,
-          programTypes,
-          savedAt
-        }));
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        }
+      } catch (err) {
+        console.warn('No se pudo cachear el estado en localStorage:', err);
+      }
+      try {
+        lastLocalSavedAtRef.current = savedAt;
+        const { error } = await supabase
+          .from('dashboard_state')
+          .upsert({ id: REMOTE_ROW_ID, state: payload, updated_at: savedAt }, { onConflict: 'id' });
+        if (error) throw error;
         setLastSavedAt(savedAt);
       } catch (err) {
-        console.warn('No se pudo guardar el estado en localStorage:', err);
+        console.warn('No se pudo guardar el estado en la nube:', err);
       }
     }, 600);
 
     return () => clearTimeout(handle);
-  }, [activities, responsibles, programTypes]);
+  }, [activities, responsibles, programTypes, remoteReady]);
 
   const handleResetLocalData = () => {
     setCustomConfirm({
