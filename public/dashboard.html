@@ -23,8 +23,26 @@
 }
 </script>
 
+<!-- Verificación de sesión (redirige a /auth si no hay sesión de Lovable Cloud) -->
+<script>
+  (function () {
+    try {
+      var raw = window.localStorage.getItem('sb-zfroepaujrbobxaaxedn-auth-token');
+      if (!raw) { window.location.replace('/auth'); return; }
+      var parsed = JSON.parse(raw);
+      var expiresAt = parsed && (parsed.expires_at || (parsed.currentSession && parsed.currentSession.expires_at));
+      if (expiresAt && Date.now() / 1000 > Number(expiresAt) + 60) {
+        window.location.replace('/auth');
+      }
+    } catch (e) {
+      window.location.replace('/auth');
+    }
+  })();
+</script>
+
 <!-- Babel Standalone: transforma JSX directamente en el navegador -->
 <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
 
 <style>
   html, body { margin: 0; padding: 0; background-color: #f8fafc; }
@@ -34,6 +52,12 @@
 </style>
 </head>
 <body>
+<!-- Barra flotante de sesión (email + cerrar sesión) -->
+<div id="session-bar" style="position:fixed;top:12px;right:12px;z-index:9999;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.95);backdrop-filter:blur(6px);border:1px solid #e2e8f0;border-radius:9999px;padding:6px 10px 6px 14px;box-shadow:0 4px 16px rgba(15,23,42,0.08);font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#334155;">
+  <span id="session-email" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">…</span>
+  <button id="session-signout" style="background:#0f172a;color:#fff;border:0;border-radius:9999px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;">Cerrar sesión</button>
+</div>
+
 <div id="root">
   <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;">
     Cargando Sistema de Gestión Ambiental…
@@ -52,10 +76,39 @@ import { createClient } from '@supabase/supabase-js';
 // ============================================================================
 const SUPABASE_URL = 'https://zfroepaujrbobxaaxedn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_crCzRAi7UFRNTgi35wUbNA_lIRGW3OB';
+const SUPABASE_STORAGE_KEY = 'sb-zfroepaujrbobxaaxedn-auth-token';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false }
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: SUPABASE_STORAGE_KEY,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  }
 });
 const REMOTE_ROW_ID = 'global';
+
+// Barra de sesión: mostrar email y permitir cerrar sesión.
+(async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const email = data.session?.user?.email;
+    const emailEl = document.getElementById('session-email');
+    if (emailEl) emailEl.textContent = email || 'Sesión activa';
+    if (!data.session) { window.location.replace('/auth'); return; }
+  } catch (e) { /* ignore */ }
+  const btn = document.getElementById('session-signout');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try { await supabase.auth.signOut(); } catch (e) { /* ignore */ }
+      window.location.replace('/auth');
+    });
+  }
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') window.location.replace('/auth');
+  });
+})();
+
 import {
   BarChart3,
   Users,
