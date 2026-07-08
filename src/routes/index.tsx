@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Seguimiento de actividades ambientales, cronograma PHVA y cumplimiento por responsable y programa.",
+          "Dashboard de seguimiento y cumplimiento del Sistema de Gestión Ambiental 2026: actividades PHVA, responsables y programas PUAA, PGIRS y PUEAE.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

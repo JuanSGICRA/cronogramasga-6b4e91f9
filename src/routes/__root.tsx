@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Control & Cumplimiento SGA 2026" },
+      { name: "description", content: "Dashboard de seguimiento y cumplimiento del Sistema de Gestión Ambiental 2026: actividades PHVA, responsables y programas PUAA, PGIRS y PUEAE." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Control & Cumplimiento SGA 2026" },
+      { property: "og:description", content: "Dashboard de seguimiento y cumplimiento del Sistema de Gestión Ambiental 2026: actividades PHVA, responsables y programas PUAA, PGIRS y PUEAE." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Control & Cumplimiento SGA 2026" },
+      { name: "twitter:description", content: "Dashboard de seguimiento y cumplimiento del Sistema de Gestión Ambiental 2026: actividades PHVA, responsables y programas PUAA, PGIRS y PUEAE." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/25039085-1ca4-4336-ba8e-1cb40f433654/id-preview-b87ebccc--5ee78abd-81e6-40c3-95ae-3cb0302e7bb3.lovable.app-1783518648145.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/25039085-1ca4-4336-ba8e-1cb40f433654/id-preview-b87ebccc--5ee78abd-81e6-40c3-95ae-3cb0302e7bb3.lovable.app-1783518648145.png" },
     ],
     links: [
       {
