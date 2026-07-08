@@ -23,8 +23,26 @@
 }
 </script>
 
+<!-- Verificación de sesión (redirige a /auth si no hay sesión de Lovable Cloud) -->
+<script>
+  (function () {
+    try {
+      var raw = window.localStorage.getItem('sb-zfroepaujrbobxaaxedn-auth-token');
+      if (!raw) { window.location.replace('/auth'); return; }
+      var parsed = JSON.parse(raw);
+      var expiresAt = parsed && (parsed.expires_at || (parsed.currentSession && parsed.currentSession.expires_at));
+      if (expiresAt && Date.now() / 1000 > Number(expiresAt) + 60) {
+        window.location.replace('/auth');
+      }
+    } catch (e) {
+      window.location.replace('/auth');
+    }
+  })();
+</script>
+
 <!-- Babel Standalone: transforma JSX directamente en el navegador -->
 <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
 
 <style>
   html, body { margin: 0; padding: 0; background-color: #f8fafc; }
