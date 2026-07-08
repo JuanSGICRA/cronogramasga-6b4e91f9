@@ -52,6 +52,12 @@
 </style>
 </head>
 <body>
+<!-- Barra flotante de sesión (email + cerrar sesión) -->
+<div id="session-bar" style="position:fixed;top:12px;right:12px;z-index:9999;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.95);backdrop-filter:blur(6px);border:1px solid #e2e8f0;border-radius:9999px;padding:6px 10px 6px 14px;box-shadow:0 4px 16px rgba(15,23,42,0.08);font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#334155;">
+  <span id="session-email" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">…</span>
+  <button id="session-signout" style="background:#0f172a;color:#fff;border:0;border-radius:9999px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;">Cerrar sesión</button>
+</div>
+
 <div id="root">
   <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;">
     Cargando Sistema de Gestión Ambiental…
