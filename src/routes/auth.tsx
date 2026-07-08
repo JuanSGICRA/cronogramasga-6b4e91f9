@@ -95,7 +95,7 @@ function AuthPage() {
           {mode === "signin" ? "Iniciar sesión" : "Crear cuenta"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Accede al Sistema de Gestión Ambiental 2026.
+          Accede al Sistema de Gestión Ambiental C.R.A.
         </p>
 
         <button
