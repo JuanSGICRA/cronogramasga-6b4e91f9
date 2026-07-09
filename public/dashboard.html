@@ -96,6 +96,18 @@ const REMOTE_ROW_ID = 'global';
     const emailEl = document.getElementById('session-email');
     if (emailEl) emailEl.textContent = email || 'Sesión activa';
     if (!data.session) { window.location.replace('/auth'); return; }
+    // Mostrar enlace "Usuarios" solo a administradores.
+    try {
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.session.user.id);
+      const isAdmin = (rolesData || []).some((r) => r.role === 'admin');
+      if (isAdmin) {
+        const link = document.getElementById('session-users-link');
+        if (link) link.style.display = 'inline-block';
+      }
+    } catch (e) { /* ignore */ }
   } catch (e) { /* ignore */ }
   const btn = document.getElementById('session-signout');
   if (btn) {
